@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { usePetStore } from '@/stores/pet'
 import type { Pet } from '@/types'
-import { useForm } from '@/composables/useForm'
+import { validateForm, ValidationRule } from '@/utils/validation'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 
 const petStore = usePetStore()
 
-// Définition des règles de validation
-const validationSchema = {
+const validationSchema: Record<string, ValidationRule> = {
   name: { 
     required: true, 
     minLength: 2, 
@@ -23,7 +22,11 @@ const validationSchema = {
   birthDate: { required: true },
   weight: { 
     required: true,
-    validator: (value: number) => value > 0 || 'Le poids doit être supérieur à 0'
+    validator: (value: any) => {
+      // Convert to number and check if it's greater than 0
+      const numValue = Number(value)
+      return !isNaN(numValue) && numValue > 0 || 'Le poids doit être supérieur à 0'
+    }
   },
   color: {
     required: true,
@@ -43,52 +46,80 @@ const validationSchema = {
   'owner.phone': { 
     required: true,
     pattern: /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/,
-    validator: (value: string) => 'Numéro de téléphone invalide'
+    validator: (value: any) => {
+      // Ensure value is a string and not empty
+      const strValue = value?.toString().trim() || ''
+      return strValue !== '' || 'Numéro de téléphone invalide'
+    }
   },
   'owner.address': { 
-    required: true, 
-    minLength: 5, 
+    required: false,  
+    minLength: 5,     
     maxLength: 200 
   }
 }
 
 // Données initiales par défaut
 const initialFormData: Pet = {
+  id: '', 
   name: '',
   breed: '',
   birthDate: '',
   weight: 0,
   color: '',
   size: '',
+  photo: '', 
   owner: {
     name: '',
     phone: '',
-    address: ''
+    address: '' 
   }
 }
 
-// Utilisation du hook useForm
-const { 
-  formData, 
-  errors, 
-  validate, 
-  reset 
-} = useForm<Pet>(
-  petStore.pet 
-    ? { ...petStore.pet } 
-    : { ...initialFormData }, 
-  validationSchema
-)
+const formData = ref<Pet>(petStore.pet ? { ...petStore.pet } : { ...initialFormData })
+const errors = ref<Record<string, string[]>>({})
 
 const emit = defineEmits<{
   (e: 'submit', pet: Pet): void
+  (e: 'cancel'): void
 }>()
 
+// Computed property to ensure address is always a string
+const ownerAddress = computed({
+  get: () => formData.value.owner.address || '',
+  set: (value: string) => {
+    formData.value.owner.address = value
+  }
+})
+
+const validate = () => {
+  errors.value = validateForm(formData.value, validationSchema)
+  
+  // Check if there are any errors
+  const hasErrors = Object.values(errors.value).some(errorList => errorList.length > 0)
+  return !hasErrors
+}
+
 const handleSubmit = () => {
+  // Trim the address and set to undefined if empty
+  if (formData.value.owner.address?.trim() === '') {
+    formData.value.owner.address = undefined
+  }
+
   if (validate()) {
     emit('submit', formData.value)
     reset()
   }
+}
+
+const handleCancel = () => {
+  emit('cancel')
+  reset()
+}
+
+const reset = () => {
+  formData.value = { ...initialFormData }
+  errors.value = {}
 }
 </script>
 
@@ -152,9 +183,9 @@ const handleSubmit = () => {
           :error="errors['owner.phone']?.[0]"
         />
         <Input
-          v-model="formData.owner.address"
-          label="Adresse"
-          placeholder="Entrez l'adresse"
+          v-model="ownerAddress"
+          label="Adresse (Optionnel)"
+          placeholder="Entrez l'adresse (facultatif)"
           class="md:col-span-2"
           :error="errors['owner.address']?.[0]"
         />
@@ -162,8 +193,19 @@ const handleSubmit = () => {
     </div>
 
     <div class="flex justify-end space-x-4">
-      <Button variant="secondary" type="button">Annuler</Button>
-      <Button variant="primary" type="submit">Enregistrer</Button>
+      <Button 
+        variant="secondary" 
+        type="button"
+        @click="handleCancel"
+      >
+        Annuler
+      </Button>
+      <Button 
+        variant="primary" 
+        type="submit"
+      >
+        Enregistrer
+      </Button>
     </div>
   </form>
 </template>

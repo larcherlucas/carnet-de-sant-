@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import type { Pet, Vaccine, WeightRecord, HealthRecord, FoodLog } from '@/types'
 
 interface PetState {
-  pet: Pet | null
+  pets: Pet[]
+  currentPetId: string | null
   vaccines: Vaccine[]
   weightHistory: WeightRecord[]
   healthRecords: HealthRecord[]
@@ -11,7 +12,8 @@ interface PetState {
 
 export const usePetStore = defineStore('pet', {
   state: (): PetState => ({
-    pet: null,
+    pets: [],
+    currentPetId: null,
     vaccines: [],
     weightHistory: [],
     healthRecords: [],
@@ -19,6 +21,11 @@ export const usePetStore = defineStore('pet', {
   }),
   
   getters: {
+    currentPet(): Pet | null {
+      return this.currentPetId 
+        ? this.pets.find(pet => pet.id === this.currentPetId) || null 
+        : null
+    },
     // Getter pour obtenir les vaccins à venir
     upcomingVaccines(): Vaccine[] {
       const today = new Date()
@@ -47,22 +54,53 @@ export const usePetStore = defineStore('pet', {
   },
   
   actions: {
-    // Méthode pour définir le pet
-    setPet(pet: Pet) {
-      this.pet = pet
+    // Add pet to the list
+    addPet(pet: Pet) {
+      // Check if pet already exists
+      const existingPetIndex = this.pets.findIndex(p => p.id === pet.id)
+      
+      if (existingPetIndex === -1) {
+        this.pets.push(pet)
+        // Automatically set as current pet
+        this.currentPetId = pet.id
+      } else {
+        // Update existing pet
+        this.pets[existingPetIndex] = pet
+      }
+    },
+
+    // Set current pet by ID
+    setCurrentPet(petId: string) {
+      const pet = this.pets.find(p => p.id === petId)
+      if (pet) {
+        this.currentPetId = petId
+        // Reset context-specific data for the new pet
+        this.resetPetContextData()
+      }
+    },
+
+    // Reset data specific to the current pet context
+    resetPetContextData() {
+      this.vaccines = []
+      this.weightHistory = []
+      this.healthRecords = []
+      this.foodLogs = []
     },
 
     // Actions pour les vaccins
     addVaccine(vaccine: Vaccine) {
-      const existingVaccine = this.vaccines.find(v => 
-        v.name === vaccine.name && v.date === vaccine.date
-      )
+      // Only add vaccine if there's a current pet
+      if (this.currentPetId) {
+        const existingVaccine = this.vaccines.find(v => 
+          v.name === vaccine.name && v.date === vaccine.date
+        )
 
-      if (!existingVaccine) {
-        this.vaccines.push(vaccine)
-        this.vaccines.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      } else {
-        console.warn('Ce vaccin existe déjà')
+        if (!existingVaccine) {
+          this.vaccines.push(vaccine)
+          this.vaccines.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        } else {
+          console.warn('Ce vaccin existe déjà')
+        }
       }
     },
 
@@ -88,9 +126,9 @@ export const usePetStore = defineStore('pet', {
         this.weightHistory.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         
         // Mettre à jour le poids du pet si c'est le dernier enregistrement
-        if (this.pet) {
+        if (this.currentPet) {
           const latestRecord = this.weightHistory[this.weightHistory.length - 1]
-          this.pet.weight = latestRecord.weight
+          this.currentPet.weight = latestRecord.weight
         }
       } else {
         console.warn('Un enregistrement de poids existe déjà pour cette date')
@@ -106,8 +144,8 @@ export const usePetStore = defineStore('pet', {
         this.weightHistory.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         
         // Mettre à jour le poids du pet si c'est le dernier enregistrement
-        if (this.pet && index === this.weightHistory.length - 1) {
-          this.pet.weight = record.weight
+        if (this.currentPet && index === this.weightHistory.length - 1) {
+          this.currentPet.weight = record.weight
         }
       }
     },
@@ -117,11 +155,11 @@ export const usePetStore = defineStore('pet', {
       this.weightHistory = this.weightHistory.filter(r => r.id !== id)
       
       // Si le dernier poids a été supprimé, réinitialiser le poids du pet
-      if (this.pet && initialLength !== this.weightHistory.length && this.weightHistory.length > 0) {
+      if (this.currentPet && initialLength !== this.weightHistory.length && this.weightHistory.length > 0) {
         const latestRecord = this.weightHistory[this.weightHistory.length - 1]
-        this.pet.weight = latestRecord.weight
-      } else if (this.pet && this.weightHistory.length === 0) {
-        this.pet.weight = 0
+        this.currentPet.weight = latestRecord.weight
+      } else if (this.currentPet && this.weightHistory.length === 0) {
+        this.currentPet.weight = 0
       }
     },
 
@@ -183,8 +221,19 @@ export const usePetStore = defineStore('pet', {
       const lastWeight = sortedWeights[sortedWeights.length - 1].weight
 
       return ((lastWeight - firstWeight) / firstWeight) * 100
+    },
+
+    // Utility method to get pet emoji based on type
+    getPetEmoji(type: Pet['type']): string {
+      const emojiMap: Record<Pet['type'], string> = {
+        'dog': '🐶',
+        'cat': '🐱',
+        'bird': '🐦',
+        'fish': '🐠'
+      }
+      return emojiMap[type]
     }
   },
 
   persist: true
-}) 
+})

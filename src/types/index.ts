@@ -1,5 +1,6 @@
 export interface Pet {
   id: string
+  type: 'dog' | 'cat' | 'bird' | 'fish'
   name: string
   photo: string
   breed: string
@@ -8,7 +9,7 @@ export interface Pet {
   owner: {
     name: string
     phone: string
-    address: string
+    address?: string
   }
   color: string
   size: string
