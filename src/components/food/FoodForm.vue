@@ -4,7 +4,9 @@ import type { FoodLog } from '@/types'
 import { useForm } from '@/composables/useForm'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
+import { usePetStore } from '@/stores/pet'
 
+const petStore = usePetStore()
 const props = defineProps<{
   initialData?: FoodLog
 }>()
@@ -13,17 +15,17 @@ const props = defineProps<{
 const validationSchema = {
   date: { required: true },
   type: { required: true },
-  food: { 
-    required: true, 
-    minLength: 2, 
-    maxLength: 100 
+  food: {
+    required: true,
+    minLength: 2,
+    maxLength: 100
   },
-  quantity: { 
-    required: true, 
+  quantity: {
+    required: true,
     validator: (value: number) => value > 0 || 'La quantité doit être supérieure à 0'
   },
   unit: { required: true },
-  notes: { 
+  notes: {
     maxLength: 500,
     validator: (value: string) => !value || value.length <= 500 || 'Les notes ne doivent pas dépasser 500 caractères'
   }
@@ -37,19 +39,20 @@ const initialFormData: FoodLog = {
   food: '',
   quantity: 0,
   unit: 'g',
-  notes: ''
+  notes: '',
+  petId: petStore.currentPetId || '' // Ajoutez l'ID de l'animal sélectionné
 }
 
 // Utilisation du hook useForm
-const { 
-  formData, 
-  errors, 
-  validate, 
-  reset 
+const {
+  formData,
+  errors,
+  validate,
+  reset
 } = useForm<FoodLog>(
-  props.initialData 
-    ? { ...props.initialData } 
-    : { ...initialFormData, id: crypto.randomUUID() }, 
+  props.initialData
+    ? { ...props.initialData, petId: petStore.currentPetId || '' } // Assurez-vous que l'ID de l'animal est inclus
+    : { ...initialFormData, id: crypto.randomUUID() },
   validationSchema
 )
 
@@ -97,9 +100,9 @@ const unitTypes = [
           class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           :class="{ 'border-red-500': errors.type?.length }"
         >
-          <option 
-            v-for="type in mealTypes" 
-            :key="type.value" 
+          <option
+            v-for="type in mealTypes"
+            :key="type.value"
             :value="type.value"
           >
             {{ type.label }}
@@ -137,9 +140,9 @@ const unitTypes = [
           class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           :class="{ 'border-red-500': errors.unit?.length }"
         >
-          <option 
-            v-for="unit in unitTypes" 
-            :key="unit.value" 
+          <option
+            v-for="unit in unitTypes"
+            :key="unit.value"
             :value="unit.value"
           >
             {{ unit.label }}

@@ -12,8 +12,15 @@ const petStore = usePetStore()
 const showForm = ref(false)
 
 const handleSubmit = (record: WeightRecord) => {
-  petStore.addWeightRecord(record)
-  showForm.value = false
+  if (petStore.currentPetId) {
+    if (!petStore.weightHistory[petStore.currentPetId]) {
+      petStore.weightHistory[petStore.currentPetId] = []
+    }
+    petStore.addWeightRecord(record)
+    showForm.value = false
+  } else {
+    console.warn('Aucun animal sélectionné')
+  }
 }
 </script>
 
@@ -25,8 +32,8 @@ const handleSubmit = (record: WeightRecord) => {
           <ScaleIcon class="text-primary-600" :size="28" />
           <h1 class="text-2xl font-bold text-primary-700">Suivi du poids</h1>
         </div>
-        <Button 
-          v-if="!showForm" 
+        <Button
+          v-if="!showForm && petStore.currentPetId"
           @click="showForm = true"
           class="flex items-center space-x-2 btn-primary animate-bounce-in"
         >
@@ -37,11 +44,11 @@ const handleSubmit = (record: WeightRecord) => {
 
       <div class="grid gap-6">
         <Card class="animate-bounce-in delay-100">
-          <WeightChart :records="petStore.weightHistory" />
+          <WeightChart :records="petStore.currentWeightHistory" />
         </Card>
 
-        <Card 
-          v-if="showForm" 
+        <Card
+          v-if="showForm"
           class="animate-slide-up transform hover:scale-[1.02] transition-transform duration-300"
         >
           <WeightForm

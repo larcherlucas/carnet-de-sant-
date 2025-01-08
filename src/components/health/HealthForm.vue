@@ -4,7 +4,9 @@ import type { HealthRecord } from '@/types'
 import { useForm } from '@/composables/useForm'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
+import { usePetStore } from '@/stores/pet'
 
+const petStore = usePetStore()
 const props = defineProps<{
   initialData?: HealthRecord
 }>()
@@ -13,21 +15,21 @@ const props = defineProps<{
 const validationSchema = {
   date: { required: true },
   type: { required: true },
-  title: { 
-    required: true, 
-    minLength: 3, 
-    maxLength: 100 
+  title: {
+    required: true,
+    minLength: 3,
+    maxLength: 100
   },
-  description: { 
-    required: true, 
-    minLength: 10, 
-    maxLength: 500 
+  description: {
+    required: true,
+    minLength: 10,
+    maxLength: 500
   },
-  treatment: { 
+  treatment: {
     maxLength: 200,
     validator: (value: string) => !value || value.length <= 200 || 'Le traitement ne doit pas dépasser 200 caractères'
   },
-  veterinarian: { 
+  veterinarian: {
     maxLength: 100,
     validator: (value: string) => !value || value.length <= 100 || 'Le nom du vétérinaire ne doit pas dépasser 100 caractères'
   }
@@ -41,19 +43,20 @@ const initialFormData: HealthRecord = {
   title: '',
   description: '',
   treatment: '',
-  veterinarian: ''
+  veterinarian: '',
+  petId: petStore.currentPetId || '' // Ajoutez l'ID de l'animal sélectionné
 }
 
 // Utilisation du hook useForm
-const { 
-  formData, 
-  errors, 
-  validate, 
-  reset 
+const {
+  formData,
+  errors,
+  validate,
+  reset
 } = useForm<HealthRecord>(
-  props.initialData 
-    ? { ...props.initialData } 
-    : { ...initialFormData, id: crypto.randomUUID() }, 
+  props.initialData
+    ? { ...props.initialData, petId: petStore.currentPetId || '' } // Assurez-vous que l'ID de l'animal est inclus
+    : { ...initialFormData, id: crypto.randomUUID() },
   validationSchema
 )
 
@@ -94,9 +97,9 @@ const healthTypes = [
           class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           :class="{ 'border-red-500': errors.type?.length }"
         >
-          <option 
-            v-for="type in healthTypes" 
-            :key="type.value" 
+          <option
+            v-for="type in healthTypes"
+            :key="type.value"
             :value="type.value"
           >
             {{ type.label }}

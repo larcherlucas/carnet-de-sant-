@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { WeightRecord } from '@/types'
+import { useForm } from '@/composables/useForm'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
-import dayjs from 'dayjs'
+import { usePetStore } from '@/stores/pet'
 
+const petStore = usePetStore()
 const formData = ref<Partial<WeightRecord>>({
-  date: dayjs().format('YYYY-MM-DD'),
+  date: new Date().toISOString().split('T')[0],
   weight: undefined,
-  notes: ''
+  notes: '',
+  petId: petStore.currentPetId || '' // Ajoutez l'ID de l'animal sélectionné
 })
 
 const emit = defineEmits<{
@@ -24,7 +27,7 @@ const errors = ref({
 const validateForm = () => {
   errors.value = {
     date: !formData.value.date ? 'La date est requise' : '',
-    weight: !formData.value.weight ? 'Le poids est requis' : 
+    weight: !formData.value.weight ? 'Le poids est requis' :
             (formData.value.weight as number) <= 0 ? 'Le poids doit être supérieur à zéro' : ''
   }
 
@@ -33,24 +36,32 @@ const validateForm = () => {
 
 const handleSubmit = () => {
   if (validateForm()) {
-    emit('submit', {
+    const record = {
       id: crypto.randomUUID(),
       ...formData.value
-    } as WeightRecord)
+    } as WeightRecord
+
+    // Stocker le poids dans le localStorage
+    const storedWeights = JSON.parse(localStorage.getItem('weights') || '[]')
+    storedWeights.push(record)
+    localStorage.setItem('weights', JSON.stringify(storedWeights))
+
+    emit('submit', record)
     resetForm()
   }
 }
 
 const resetForm = () => {
   formData.value = {
-    date: dayjs().format('YYYY-MM-DD'),
+    date: new Date().toISOString().split('T')[0],
     weight: undefined,
-    notes: ''
+    notes: '',
+    petId: petStore.currentPetId || '' // Réinitialisez l'ID de l'animal sélectionné
   }
 }
 
-const minDate = computed(() => dayjs().subtract(1, 'year').format('YYYY-MM-DD'))
-const maxDate = computed(() => dayjs().format('YYYY-MM-DD'))
+const minDate = computed(() => new Date().toISOString().split('T')[0])
+const maxDate = computed(() => new Date().toISOString().split('T')[0])
 </script>
 
 <template>

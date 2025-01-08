@@ -12,9 +12,8 @@ import {
   Legend
 } from 'chart.js'
 import type { WeightRecord } from '@/types'
-import dayjs from 'dayjs'
-import 'dayjs/locale/fr'
-dayjs.locale('fr')
+import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 
 ChartJS.register(
   CategoryScale,
@@ -32,11 +31,11 @@ const props = defineProps<{
 
 const chartData = computed(() => {
   const sortedRecords = [...props.records].sort((a, b) => 
-    dayjs(a.date).valueOf() - dayjs(b.date).valueOf()
+    new Date(a.date).getTime() - new Date(b.date).getTime()
   )
 
   return {
-    labels: sortedRecords.map(r => dayjs(r.date).format('DD MMM')),
+    labels: sortedRecords.map(r => format(new Date(r.date), 'dd MMM', { locale: fr })),
     datasets: [{
       label: 'Poids (kg)',
       data: sortedRecords.map(r => r.weight),
@@ -56,9 +55,14 @@ const options = {
   scales: {
     y: {
       beginAtZero: false,
-      title: {
-        display: true,
-        text: 'Poids (kg)'
+      grid: {
+        color: 'rgba(79, 70, 229, 0.1)',
+        borderDash: [5, 5]
+      }
+    },
+    x: {
+      grid: {
+        display: false
       }
     }
   },
@@ -67,6 +71,10 @@ const options = {
       display: false
     },
     tooltip: {
+      backgroundColor: 'rgba(79, 70, 229, 0.9)',
+      titleColor: 'white',
+      bodyColor: 'white',
+      padding: 12,
       callbacks: {
         label: (context: any) => `${context.parsed.y} kg`
       }
@@ -74,7 +82,7 @@ const options = {
   }
 }
 
-const hasEnoughData = computed(() => props.records.length > 1)
+const hasEnoughData = computed(() => props.records.length > 0)
 </script>
 
 <template>

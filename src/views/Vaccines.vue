@@ -50,7 +50,7 @@ const closeForm = () => {
 
     <Card v-else>
       <VaccineList
-        :vaccines="petStore.vaccines"
+        :vaccines="petStore.currentVaccines"
         @edit="handleEdit"
         @delete="petStore.deleteVaccine"
       />
