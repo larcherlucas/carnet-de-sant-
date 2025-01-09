@@ -32,10 +32,7 @@ const closeForm = () => {
 
 // Récupérer les vaccins du localStorage lors du chargement de la page
 const fetchVaccines = () => {
-  const storedVaccines = JSON.parse(localStorage.getItem('vaccines') || '[]')
-  storedVaccines.forEach((vaccine: Vaccine) => {
-    petStore.addVaccine(vaccine)
-  })
+  petStore.loadVaccinesFromLocalStorage()
 }
 
 onMounted(() => {

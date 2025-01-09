@@ -73,7 +73,7 @@ export const usePetStore = defineStore('pet', {
 
     addPet(pet: Pet) {
       const existingPetIndex = this.pets.findIndex(p => p.id === pet.id)
-      
+
       if (existingPetIndex === -1) {
         this.pets.push(pet)
         this.currentPetId = pet.id
@@ -128,9 +128,10 @@ export const usePetStore = defineStore('pet', {
 
       if (!existingVaccine) {
         this.vaccines[this.currentPetId].push(vaccine)
-        this.vaccines[this.currentPetId].sort((a, b) => 
+        this.vaccines[this.currentPetId].sort((a, b) =>
           new Date(a.date).getTime() - new Date(b.date).getTime()
         )
+        this.saveVaccinesToLocalStorage()
       }
     },
 
@@ -138,11 +139,13 @@ export const usePetStore = defineStore('pet', {
       const index = this.vaccines[this.currentPetId || ''].findIndex(v => v.id === id)
       if (index !== -1) {
         this.vaccines[this.currentPetId || ''][index] = vaccine
+        this.saveVaccinesToLocalStorage()
       }
     },
 
     deleteVaccine(id: string) {
       this.vaccines[this.currentPetId || ''] = this.vaccines[this.currentPetId || ''].filter(v => v.id !== id)
+      this.saveVaccinesToLocalStorage()
     },
 
     updateWeightRecord(id: string, record: WeightRecord) {
@@ -234,6 +237,15 @@ export const usePetStore = defineStore('pet', {
         'fish': '🐠'
       }
       return emojiMap[type]
+    },
+
+    saveVaccinesToLocalStorage() {
+      localStorage.setItem('vaccines', JSON.stringify(this.vaccines))
+    },
+
+    loadVaccinesFromLocalStorage() {
+      const storedVaccines = JSON.parse(localStorage.getItem('vaccines') || '{}')
+      this.vaccines = storedVaccines
     }
   },
 
