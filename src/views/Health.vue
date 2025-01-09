@@ -30,6 +30,16 @@ const closeForm = () => {
   showForm.value = false
   editingRecord.value = null
 }
+
+// Récupérer les événements de santé du localStorage lors du chargement de la page
+const fetchHealthRecords = () => {
+  const storedHealthRecords = JSON.parse(localStorage.getItem('healthRecords') || '[]')
+  storedHealthRecords.forEach((record: HealthRecord) => {
+    petStore.addHealthRecord(record)
+  })
+}
+
+fetchHealthRecords()
 </script>
 
 <template>

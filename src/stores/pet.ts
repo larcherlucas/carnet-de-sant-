@@ -27,16 +27,24 @@ export const usePetStore = defineStore('pet', {
         : null
     },
     currentVaccines(): Vaccine[] {
-      return this.vaccines[this.currentPetId || ''] || []
+      return this.currentPetId && this.vaccines[this.currentPetId]
+        ? this.vaccines[this.currentPetId]
+        : []
     },
     currentWeightHistory(): WeightRecord[] {
-      return this.weightHistory[this.currentPetId || ''] || []
+      return this.currentPetId && this.weightHistory[this.currentPetId]
+        ? this.weightHistory[this.currentPetId]
+        : []
     },
     currentHealthRecords(): HealthRecord[] {
-      return this.healthRecords[this.currentPetId || ''] || []
+      return this.currentPetId && this.healthRecords[this.currentPetId]
+        ? this.healthRecords[this.currentPetId]
+        : []
     },
     currentFoodLogs(): FoodLog[] {
-      return this.foodLogs[this.currentPetId || ''] || []
+      return this.currentPetId && this.foodLogs[this.currentPetId]
+        ? this.foodLogs[this.currentPetId]
+        : []
     },
     upcomingVaccines(): Vaccine[] {
       const today = new Date()
@@ -45,18 +53,8 @@ export const usePetStore = defineStore('pet', {
         .sort((a, b) => new Date(a.nextDate).getTime() - new Date(b.nextDate).getTime())
     },
     sortedWeightHistory(): WeightRecord[] {
-      return this.currentWeightHistory
-        .slice()
+      return [...this.currentWeightHistory]
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    },
-    weightRange(): { min: number, max: number } {
-      if (this.currentWeightHistory.length === 0) return { min: 0, max: 0 }
-
-      const weights = this.currentWeightHistory.map(record => record.weight)
-      return {
-        min: Math.min(...weights),
-        max: Math.max(...weights)
-      }
     }
   },
 
@@ -65,10 +63,27 @@ export const usePetStore = defineStore('pet', {
       const pet = this.pets.find(p => p.id === petId)
       if (pet) {
         this.currentPetId = petId
-        // Initialisation du tableau weightHistory si nécessaire
-        if (!this.weightHistory[petId]) {
-          this.weightHistory[petId] = []
-        }
+        // Initialize arrays if they don't exist
+        if (!this.vaccines[petId]) this.vaccines[petId] = []
+        if (!this.weightHistory[petId]) this.weightHistory[petId] = []
+        if (!this.healthRecords[petId]) this.healthRecords[petId] = []
+        if (!this.foodLogs[petId]) this.foodLogs[petId] = []
+      }
+    },
+
+    addPet(pet: Pet) {
+      const existingPetIndex = this.pets.findIndex(p => p.id === pet.id)
+      
+      if (existingPetIndex === -1) {
+        this.pets.push(pet)
+        this.currentPetId = pet.id
+        // Initialize arrays for the new pet
+        this.vaccines[pet.id] = []
+        this.weightHistory[pet.id] = []
+        this.healthRecords[pet.id] = []
+        this.foodLogs[pet.id] = []
+      } else {
+        this.pets[existingPetIndex] = pet
       }
     },
 
@@ -85,17 +100,49 @@ export const usePetStore = defineStore('pet', {
 
       if (!existingRecord) {
         this.weightHistory[this.currentPetId].push(record)
-        this.weightHistory[this.currentPetId].sort((a, b) => 
+        this.weightHistory[this.currentPetId].sort((a, b) =>
           new Date(a.date).getTime() - new Date(b.date).getTime()
         )
 
         if (this.currentPet) {
-          const latestRecord = this.weightHistory[this.currentPetId][this.weightHistory[this.currentPetId].length - 1]
+          const latestRecord = this.weightHistory[this.currentPetId][
+            this.weightHistory[this.currentPetId].length - 1
+          ]
           this.currentPet.weight = latestRecord.weight
         }
       } else {
         console.warn('Un enregistrement de poids existe déjà pour cette date')
       }
+    },
+
+    addVaccine(vaccine: Vaccine) {
+      if (!this.currentPetId) return
+
+      if (!this.vaccines[this.currentPetId]) {
+        this.vaccines[this.currentPetId] = []
+      }
+
+      const existingVaccine = this.vaccines[this.currentPetId].find(v =>
+        v.name === vaccine.name && v.date === vaccine.date
+      )
+
+      if (!existingVaccine) {
+        this.vaccines[this.currentPetId].push(vaccine)
+        this.vaccines[this.currentPetId].sort((a, b) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        )
+      }
+    },
+
+    updateVaccine(id: string, vaccine: Vaccine) {
+      const index = this.vaccines[this.currentPetId || ''].findIndex(v => v.id === id)
+      if (index !== -1) {
+        this.vaccines[this.currentPetId || ''][index] = vaccine
+      }
+    },
+
+    deleteVaccine(id: string) {
+      this.vaccines[this.currentPetId || ''] = this.vaccines[this.currentPetId || ''].filter(v => v.id !== id)
     },
 
     updateWeightRecord(id: string, record: WeightRecord) {

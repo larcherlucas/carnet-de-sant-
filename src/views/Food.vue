@@ -30,6 +30,16 @@ const closeForm = () => {
   showForm.value = false
   editingLog.value = null
 }
+
+// Récupérer les alimentations du localStorage lors du chargement de la page
+const fetchFoodLogs = () => {
+  const storedFoodLogs = JSON.parse(localStorage.getItem('foodLogs') || '[]')
+  storedFoodLogs.forEach((log: FoodLog) => {
+    petStore.addFoodLog(log)
+  })
+}
+
+fetchFoodLogs()
 </script>
 
 <template>

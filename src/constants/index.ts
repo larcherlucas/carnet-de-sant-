@@ -16,3 +16,8 @@ export const MEAL_TYPES = {
     KILOGRAMS: { value: 'kg', label: 'Kilogrammes' },
     PORTION: { value: 'portion', label: 'Portion' }
   } as const
+
+  export const STORAGE_KEYS = {
+    WEIGHTS: 'pet_weights',
+    PETS: 'pets'
+  } as const

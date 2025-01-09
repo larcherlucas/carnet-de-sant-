@@ -12,16 +12,19 @@ const petStore = usePetStore()
 const showForm = ref(false)
 
 const handleSubmit = (record: WeightRecord) => {
-  if (petStore.currentPetId) {
-    if (!petStore.weightHistory[petStore.currentPetId]) {
-      petStore.weightHistory[petStore.currentPetId] = []
-    }
-    petStore.addWeightRecord(record)
-    showForm.value = false
-  } else {
-    console.warn('Aucun animal sélectionné')
-  }
+  petStore.addWeightRecord(record)
+  showForm.value = false
 }
+
+// Récupérer les poids du localStorage lors du chargement de la page
+const fetchWeights = () => {
+  const storedWeights = JSON.parse(localStorage.getItem('weights') || '[]')
+  storedWeights.forEach((weight: WeightRecord) => {
+    petStore.addWeightRecord(weight)
+  })
+}
+
+fetchWeights()
 </script>
 
 <template>
@@ -33,7 +36,7 @@ const handleSubmit = (record: WeightRecord) => {
           <h1 class="text-2xl font-bold text-primary-700">Suivi du poids</h1>
         </div>
         <Button
-          v-if="!showForm && petStore.currentPetId"
+          v-if="!showForm"
           @click="showForm = true"
           class="flex items-center space-x-2 btn-primary animate-bounce-in"
         >

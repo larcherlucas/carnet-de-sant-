@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { usePetStore } from '@/stores/pet'
 import type { Vaccine } from '@/types'
 import Card from '@/components/ui/Card.vue'
@@ -29,6 +29,18 @@ const closeForm = () => {
   showForm.value = false
   editingVaccine.value = null
 }
+
+// Récupérer les vaccins du localStorage lors du chargement de la page
+const fetchVaccines = () => {
+  const storedVaccines = JSON.parse(localStorage.getItem('vaccines') || '[]')
+  storedVaccines.forEach((vaccine: Vaccine) => {
+    petStore.addVaccine(vaccine)
+  })
+}
+
+onMounted(() => {
+  fetchVaccines()
+})
 </script>
 
 <template>

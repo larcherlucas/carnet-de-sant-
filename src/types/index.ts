@@ -5,7 +5,7 @@ export interface Pet {
   photo: string
   breed: string
   birthDate: string
-  weight: number
+  weight?: number
   owner: {
     name: string
     phone: string
@@ -22,10 +22,12 @@ export interface Vaccine {
   nextDate: string
   description: string
   veterinarian: string
+  category: string // 'core' | 'non-core'
 }
 
 export interface WeightRecord {
   id: string
+  petId: string
   date: string
   weight: number
   notes?: string

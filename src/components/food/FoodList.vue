@@ -14,7 +14,7 @@ const emit = defineEmits<{
 }>()
 
 const sortedLogs = computed(() => {
-  return [...props.logs].sort((a, b) => 
+  return [...props.logs].sort((a, b) =>
     dayjs(b.date).valueOf() - dayjs(a.date).valueOf()
   )
 })
@@ -32,8 +32,7 @@ const getMealLabel = (type: string) => {
 
 <template>
   <div class="space-y-4">
-    <div v-for="log in sortedLogs" :key="log.id" 
-         class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div v-for="log in sortedLogs" :key="log.id" class="border rounded-lg p-4 hover:shadow-md transition-shadow">
       <div class="flex justify-between items-start">
         <div class="space-y-2">
           <div class="flex items-center gap-2">

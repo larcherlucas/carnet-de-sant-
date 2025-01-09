@@ -22,7 +22,7 @@ const validationSchema = {
   },
   quantity: {
     required: true,
-    validator: (value: number) => value > 0 || 'La quantité doit être supérieure à 0'
+    validator: (value: number) => value > 0 || 'La quantité doit être supérieure à zéro'
   },
   unit: { required: true },
   notes: {
@@ -169,7 +169,7 @@ const unitTypes = [
     </div>
 
     <div class="flex justify-end space-x-4">
-      <Button variant="secondary" type="button" @click="$emit('cancel')">
+      <Button variant="secondary" type="button" @click="emit('cancel')">
         Annuler
       </Button>
       <Button variant="primary" type="submit">

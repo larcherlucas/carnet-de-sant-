@@ -9,7 +9,7 @@ import { usePetStore } from '@/stores/pet'
 const petStore = usePetStore()
 const formData = ref<Partial<WeightRecord>>({
   date: new Date().toISOString().split('T')[0],
-  weight: undefined,
+  weight: 0, // Initialize to 0 or any default number
   notes: '',
   petId: petStore.currentPetId || '' // Ajoutez l'ID de l'animal sélectionné
 })
@@ -54,7 +54,7 @@ const handleSubmit = () => {
 const resetForm = () => {
   formData.value = {
     date: new Date().toISOString().split('T')[0],
-    weight: undefined,
+    weight: 0, // Reset to 0 or any default number
     notes: '',
     petId: petStore.currentPetId || '' // Réinitialisez l'ID de l'animal sélectionné
   }
